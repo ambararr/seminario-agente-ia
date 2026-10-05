@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agentes inteligentes y sistemas con IA — Curso interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#F2F5F9; --surface:#FFFFFF; --ink:#101828; --muted:#566074; --line:#DCE2EB;
+  --brand:#3446F0; --brand-dark:#2331C4; --brand-soft:#E8EBFE;
+  --ok:#0B8A5F; --ok-soft:#E1F5EC; --bad:#C8243F; --bad-soft:#FCE8EC;
+  --warn:#9A5B00; --warn-soft:#FFF3D6;
+  --radius:14px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 "Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:"Bricolage Grotesque","Public Sans",system-ui,sans-serif;line-height:1.15;margin:0;letter-spacing:-.01em}
+a{color:var(--brand)}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* ---------- Layout ---------- */
+.app{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
+.nav{position:sticky;top:env(safe-area-inset-top,0px);height:calc(100vh - env(safe-area-inset-top,0px));height:calc(100dvh - env(safe-area-inset-top,0px));overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);padding:22px 14px 28px;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;gap:10px;align-items:center;text-decoration:none;color:var(--ink);padding:0 6px}
+.brand-mark{width:38px;height:38px;border-radius:11px;background:var(--brand);color:#fff;display:grid;place-items:center;font-size:20px;flex:none}
+.brand b{font:800 17px/1.1 "Bricolage Grotesque",sans-serif;display:block}
+.brand small{color:var(--muted);font-size:12.5px}
+.progress-box{background:var(--bg);border-radius:12px;padding:12px 14px}
+.progress-box p{margin:0 0 8px;font-size:13.5px;color:var(--muted)}
+.progress-box p b{color:var(--ink)}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .4s}
+.nav-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 10px;border-radius:12px;text-decoration:none;color:var(--ink);border:1px solid transparent;transition:background .15s}
+.nav-item:hover{background:var(--bg)}
+.nav-item[aria-current="page"]{background:var(--brand-soft);border-color:#CBD2FD}
+.nav-num{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font:700 14px "Bricolage Grotesque",sans-serif;background:color-mix(in srgb,var(--m) 14%,white);color:var(--m)}
+.nav-text{flex:1;min-width:0;font-weight:600;font-size:14.5px;line-height:1.3}
+.nav-text small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;margin-top:1px}
+.nav-badge{flex:none;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--bg);color:var(--muted)}
+.nav-badge.pass{background:var(--ok-soft);color:var(--ok)}
+.nav-badge.low{background:var(--warn-soft);color:var(--warn)}
+.nav-home{margin-bottom:2px}
+
+.topbar{display:none}
+.scrim{position:fixed;inset:0;background:rgba(16,24,40,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:25}
+.scrim.show{opacity:1;pointer-events:auto}
+
+.content{max-width:940px;margin:0 auto;padding:34px 28px 90px}
+.content:focus{outline:none}
+
+@media (max-width:959px){
+  .app{display:block}
+  .nav{position:fixed;top:0;left:0;bottom:0;height:auto;width:min(88vw,330px);z-index:30;transform:translateX(-104%);visibility:hidden;transition:transform .25s,visibility 0s .25s;padding-top:calc(env(safe-area-inset-top,0px) + 18px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+  .nav.open{transform:none;visibility:visible;transition-delay:0s;box-shadow:0 0 40px rgba(16,24,40,.25)}
+  .topbar{display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 14px}
+  .topbar button{width:42px;height:42px;border-radius:11px;border:1px solid var(--line);background:#fff;font-size:20px;line-height:1}
+  .topbar span{font:700 16px "Bricolage Grotesque",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .content{padding:22px 16px 80px}
+}
+
+/* ---------- Home ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:30px;align-items:center;margin-bottom:38px}
+.hero h1{font-size:clamp(2.1rem,5.2vw,3.35rem);font-weight:800}
+.hero p.lead{font-size:1.1rem;color:var(--muted);margin:16px 0 22px;max-width:46ch}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;border:1px solid transparent;font-weight:700;text-decoration:none;transition:background .15s,transform .1s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-primary:hover{background:var(--brand-dark)}
+.btn-primary:disabled{background:#B4BAD6;cursor:not-allowed}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--bg)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px}
+.loop svg{width:100%;height:auto;display:block;max-width:380px;margin:0 auto}
+.loop .node{cursor:pointer}
+.loop .node circle{fill:#fff;stroke:var(--line);stroke-width:2;transition:fill .25s,stroke .25s}
+.loop .node text{font:700 13px "Public Sans",sans-serif;fill:var(--ink);text-anchor:middle;pointer-events:none;transition:fill .25s}
+.loop .node.on circle{fill:var(--brand);stroke:var(--brand)}
+.loop .node.on text{fill:#fff}
+.loop .node:focus-visible circle{stroke:var(--brand-dark);stroke-width:4}
+.loop .center{font:800 15px "Bricolage Grotesque",sans-serif;fill:var(--muted);text-anchor:middle}
+.loop-desc{margin:10px 4px 2px;min-height:5.2em;font-size:.97rem}
+.loop-desc b{font-family:"Bricolage Grotesque",sans-serif;font-size:1.05rem}
+.section-title{font-size:1.5rem;font-weight:700;margin:6px 0 16px}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.mod-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;transition:border-color .15s,box-shadow .15s}
+.mod-card:hover{border-color:var(--m);box-shadow:0 6px 22px rgba(16,24,40,.07)}
+.mod-card h3{font-size:1.12rem;font-weight:700}
+.mod-card p{margin:0;color:var(--muted);font-size:.93rem;flex:1}
+.mod-top{display:flex;justify-content:space-between;align-items:center}
+.mod-num{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:800 16px "Bricolage Grotesque",sans-serif;background:color-mix(in srgb,var(--m) 14%,white);color:var(--m)}
+@media (max-width:720px){.hero{grid-template-columns:1fr}}
+
+/* ---------- Module ---------- */
+.mod-head{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
+.mod-head .mod-num{width:48px;height:48px;font-size:22px;border-radius:14px;flex:none}
+.mod-head h1{font-size:clamp(1.65rem,3.6vw,2.4rem);font-weight:800}
+.mod-head p{margin:8px 0 0;color:var(--muted)}
+.tabs{display:inline-flex;background:#E4E9F1;border-radius:13px;padding:4px;gap:4px;margin:6px 0 24px}
+.tabs a{padding:9px 18px;border-radius:10px;text-decoration:none;font-weight:700;color:var(--muted);font-size:.95rem}
+.tabs a[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+.lesson>p{max-width:72ch}
+.lesson h3{font-size:1.35rem;font-weight:700;margin:32px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin:0 0 6px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;border-top:4px solid var(--m)}
+.card h4{font-size:1.06rem;font-weight:700;margin-bottom:6px}
+.card p{margin:0;font-size:.94rem;color:#2D3748}
+.card .ex{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:.88rem;color:var(--muted)}
+.card .ex b{color:var(--ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#F7F9FC;font-weight:700;font-size:.88rem;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-weight:700;white-space:nowrap}
+.note{background:var(--brand-soft);border-left:4px solid var(--brand);border-radius:10px;padding:13px 16px;margin:18px 0;max-width:72ch}
+.note.warn{background:var(--warn-soft);border-color:#E2A33A}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;gap:10px;max-width:78ch}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:12px 14px}
+.steps li::before{content:counter(s);width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font:700 14px "Bricolage Grotesque",sans-serif}
+.steps b{display:block}
+.steps span{color:#2D3748;font-size:.94rem}
+.acc{display:grid;gap:8px;max-width:78ch}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 16px}
+summary{cursor:pointer;font-weight:700;padding:13px 0;list-style-position:outside}
+details[open]{border-color:#B9C2FA}
+details[open] summary{color:var(--brand-dark)}
+details>div{padding:0 0 14px;color:#2D3748;font-size:.95rem}
+details ul{margin:6px 0 0;padding-left:20px}
+pre{margin:0;overflow-x:auto;font:500 13.5px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+.prompt{margin:0;border:1px solid #C9D0F7;border-radius:14px;background:#F7F8FF;overflow:hidden;max-width:880px}
+.prompt figcaption{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px 9px 16px;background:var(--brand-soft);font-weight:700;font-size:.92rem}
+.prompt pre{padding:14px 16px}
+.copy{border:1px solid #BCC5FA;background:#fff;color:var(--brand-dark);border-radius:9px;padding:5px 12px;font-weight:700;font-size:.85rem}
+.copy:hover{background:var(--brand-soft)}
+.code{background:#101828;color:#E6EAF2;border-radius:14px;padding:16px 18px;max-width:880px}
+.arch{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;max-width:880px}
+.arch-row{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.arch .box{flex:1;min-width:150px;border:2px solid var(--m);border-radius:12px;padding:10px 12px;font-weight:700;background:color-mix(in srgb,var(--m) 7%,white)}
+.arch .box small{display:block;font-weight:400;color:var(--muted);font-size:.82rem}
+.arch .arrow{align-self:center;font-size:20px;color:var(--muted)}
+.arch-side{margin-top:12px;padding:10px 12px;border:2px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.9rem}
+.cta{margin-top:34px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:20px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.cta p{margin:0;flex:1;min-width:200px;font-weight:600}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:30px;flex-wrap:wrap}
+
+/* ---------- Quiz ---------- */
+.quiz-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:14px;padding:11px 16px;margin-bottom:18px;display:flex;align-items:center;gap:14px}
+@media (max-width:959px){.quiz-bar{top:calc(env(safe-area-inset-top,0px) + 68px)}}
+.quiz-bar .bar{flex:1}
+.quiz-bar .bar>i{background:var(--brand)}
+.quiz-bar span{font-weight:700;font-size:.92rem;white-space:nowrap}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}
+.q h4{font:700 1.05rem/1.4 "Public Sans",sans-serif;margin-bottom:12px;letter-spacing:0}
+.q h4 small{display:block;color:var(--muted);font-weight:600;font-size:.8rem;margin-bottom:2px}
+.opts{display:grid;gap:8px}
+.opt{position:relative;display:flex;gap:12px;align-items:flex-start;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;transition:border-color .12s,background .12s;background:#fff}
+.opt:hover{border-color:#9DA9F8;background:#FAFBFF}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .dot{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #AAB3C5;margin-top:1px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;transition:all .12s}
+.opt:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+.opt:has(input:checked) .dot{border-color:var(--brand);background:var(--brand);box-shadow:inset 0 0 0 4px var(--brand-soft)}
+.opt:has(input:focus-visible){outline:3px solid var(--brand);outline-offset:2px}
+.quiz.done .opt{cursor:default}
+.quiz.done .opt:hover{background:#fff;border-color:var(--line)}
+.opt.right{border-color:var(--ok)!important;background:var(--ok-soft)!important}
+.opt.right .dot{background:var(--ok)!important;border-color:var(--ok)!important;box-shadow:none!important}
+.opt.right .dot::after{content:"✓"}
+.opt.wrong{border-color:var(--bad)!important;background:var(--bad-soft)!important}
+.opt.wrong .dot{background:var(--bad)!important;border-color:var(--bad)!important;box-shadow:none!important}
+.opt.wrong .dot::after{content:"✕"}
+.fb{margin-top:12px;padding:11px 14px;border-radius:12px;font-size:.93rem}
+.fb.ok{background:var(--ok-soft);color:#0A5C40}
+.fb.ko{background:var(--bad-soft);color:#8A1A2D}
+.fb b{display:block;margin-bottom:2px}
+.quiz-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.quiz-actions small{color:var(--muted)}
+.result{display:flex;gap:22px;align-items:center;flex-wrap:wrap;background:var(--surface);border:2px solid var(--c);border-radius:18px;padding:20px;margin-bottom:18px}
+.ring{--p:0;width:116px;height:116px;border-radius:50%;background:conic-gradient(var(--c) calc(var(--p) * 1%),var(--line) 0);display:grid;place-items:center;flex:none}
+.ring div{width:88px;height:88px;border-radius:50%;background:#fff;display:grid;place-items:center;text-align:center;font:800 28px/1 "Bricolage Grotesque",sans-serif}
+.ring small{display:block;font:600 12px "Public Sans",sans-serif;color:var(--muted);margin-top:2px}
+.result-body{flex:1;min-width:230px}
+.result-body h3{font-size:1.4rem;font-weight:800}
+.result-body p{margin:6px 0 14px;color:#2D3748}
+.result-body .row{display:flex;gap:10px;flex-wrap:wrap}
+.quiz.only-wrong .q.is-right{display:none}
+.hint-empty{padding:12px 16px;border-radius:12px;background:var(--ok-soft);color:#0A5C40;font-weight:600;display:none;margin-bottom:12px}
+.quiz.only-wrong.perfect .hint-empty{display:block}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav" id="nav" aria-label="Menú de módulos">
+    <a class="brand" href="#/"><span class="brand-mark" aria-hidden="true">🤖</span><span><b>Agentes IA</b><small>Curso interactivo con quizzes</small></span></a>
+    <div class="progress-box">
+      <p id="progText">Tu avance</p>
+      <div class="bar" role="progressbar" aria-label="Avance del curso" aria-valuemin="0" aria-valuemax="8" id="progBar"><i id="progFill"></i></div>
+    </div>
+    <nav aria-label="Módulos"><ul class="nav-list" id="navList"></ul></nav>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main>
+    <header class="topbar">
+      <button id="menuBtn" aria-label="Abrir menú" aria-expanded="false" aria-controls="nav">☰</button>
+      <span id="topTitle">Agentes IA</span>
+    </header>
+    <div class="content" id="view" tabindex="-1"></div>
+  </main>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ====================== Utilidades ====================== */
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const $ = (s,r=document) => r.querySelector(s);
+const Q = (q,o,e) => ({q,o,e}); // o[0] es la respuesta correcta; se mezclan al mostrar
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const COLORS = ["#3446F0","#0E8F8F","#C2410C","#7C3AED","#B4236B","#0F7B3F","#1D6FB8","#B45309"];
+
+/* ====================== Almacenamiento (por visitante) ====================== */
+const KEY="curso-agentes-ia-v1";
+let store={scores:{}};
+try{ const raw=localStorage.getItem(KEY); if(raw) store=JSON.parse(raw)||{scores:{}}; }catch(e){}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(store)); }catch(e){} }
+
+/* ====================== CONTENIDO ====================== */
+const MODULES = [
+
+/* ---------- 1 ---------- */
+{ id:1, short:"Tipos de agentes inteligentes", title:"Diferentes tipos de agentes inteligentes",
+  desc:"Reflejo simple, basados en modelos, objetivos, utilidad, aprendizaje y los agentes modernos con IA.",
+  lead:"Un agente inteligente es una entidad que percibe su entorno mediante sensores y actúa sobre él mediante actuadores para alcanzar un objetivo. Puede ser un robot, un programa o un asistente basado en un modelo de lenguaje. Lo que cambia de un tipo a otro es cómo decide qué hacer.",
+  blocks:[
+    {t:"h",x:"Los cinco tipos clásicos"},
+    {t:"cards",items:[
+      {h:"Reflejo simple",p:"Elige la acción solo con lo que percibe ahora, mediante reglas «si condición, entonces acción». No guarda historia.",tag:"Termostato: si la temperatura baja de 20 °C, enciende la calefacción."},
+      {h:"Basado en modelos",p:"Mantiene un estado interno —un modelo de cómo funciona el mundo— para decidir aunque no vea todo lo que ocurre.",tag:"Aspiradora que recuerda qué habitaciones ya limpió."},
+      {h:"Basado en objetivos",p:"Tiene una meta explícita y busca o planifica la secuencia de acciones que lo lleva a ella.",tag:"Navegador GPS que calcula la ruta hacia un destino."},
+      {h:"Basado en utilidad",p:"Cuando hay varias formas de lograr la meta, puntúa cada resultado con una función de utilidad y elige el mejor equilibrio.",tag:"Asistente de rutas que pondera tiempo, costo y seguridad."},
+      {h:"De aprendizaje",p:"Mejora con la experiencia. Incluye elemento de aprendizaje, crítico que evalúa, elemento de desempeño y generador de problemas que propone explorar.",tag:"Recomendador que se ajusta con cada compra del cliente."}
+    ]},
+    {t:"h",x:"Tipos modernos que conviene conocer"},
+    {t:"cards",items:[
+      {h:"Multiagente",p:"Varios agentes que cooperan, compiten o se coordinan, cada uno con un rol.",tag:"Un agente investiga, otro redacta y otro revisa."},
+      {h:"Jerárquico",p:"Un agente coordinador descompone la tarea y delega en agentes especializados.",tag:"Gerente virtual que asigna subtareas a otros agentes."},
+      {h:"Agente con LLM y herramientas",p:"Usa un modelo de lenguaje para razonar y puede llamar herramientas (APIs, bases de datos, buscadores) en un ciclo de percibir, pensar y actuar.",tag:"Asistente que consulta el inventario y responde al cliente."}
+    ]},
+    {t:"note",x:"Los tipos no son excluyentes: un sistema real suele combinarlos, por ejemplo reflejos para emergencias y utilidad para planificar."},
+    {t:"acc",items:[{h:"Truco para identificarlos rápido",p:"<ul><li>¿Solo aplica reglas inmediatas? Reflejo simple.</li><li>¿Guarda un estado del mundo? Basado en modelos.</li><li>¿Persigue una meta explícita? Basado en objetivos.</li><li>¿Compara qué tan bueno es cada resultado? Basado en utilidad.</li><li>¿Mejora solo con datos y experiencia? De aprendizaje.</li></ul>"}]}
+  ],
+  quiz:[
+    Q("Según el enfoque clásico de la IA, ¿qué es un agente inteligente?",["Una entidad que percibe su entorno con sensores y actúa sobre él con actuadores","Un programa que solo almacena datos en una base de datos","Una interfaz gráfica para escribir código","Un robot con forma humana"],"Lo esencial es el ciclo percepción–acción. No tiene que ser un robot ni tener forma humana."),
+    Q("Un termostato que enciende la calefacción cuando la temperatura baja de 20 °C es un agente…",["reflejo simple","basado en utilidad","de aprendizaje","multiagente"],"Aplica una regla condición–acción directa sobre la percepción actual, sin memoria ni planificación."),
+    Q("¿Qué tipo de agente mantiene un estado interno (modelo del mundo) para decidir cuando no percibe todo?",["Basado en modelos","Reflejo simple","Ninguno: todos los agentes ven el entorno completo","Solo los agentes multiagente"],"El estado interno le permite inferir lo que no puede observar directamente."),
+    Q("Un GPS que calcula la secuencia de giros para llegar a un destino es, principalmente, un agente…",["basado en objetivos","reflejo simple","sin sensores","que no necesita planificar"],"Tiene una meta explícita (llegar al destino) y busca un plan para lograrla."),
+    Q("Si hay varias rutas válidas y el agente elige la que mejor equilibra tiempo, costo y seguridad, es un agente…",["basado en utilidad","reflejo simple","basado únicamente en reglas fijas","sin objetivo"],"La función de utilidad mide qué tan deseable es cada resultado, no solo si cumple la meta."),
+    Q("¿Qué agente mejora su desempeño a partir de la experiencia?",["De aprendizaje","Reflejo simple","Basado en reglas fijas","Ninguno puede mejorar"],"Los agentes de aprendizaje modifican su comportamiento según los resultados obtenidos."),
+    Q("Varios agentes que colaboran o compiten, cada uno con un rol distinto, forman un sistema…",["multiagente","de un solo agente","de reflejo simple","sin entorno"],"En un sistema multiagente, la coordinación entre agentes es parte central del diseño."),
+    Q("¿Cuál de los siguientes NO es uno de los cinco tipos clásicos de agente?",["Basado en plantillas de diseño gráfico","Reflejo simple","Basado en modelos","Basado en utilidad"],"Los cinco clásicos son: reflejo simple, basado en modelos, basado en objetivos, basado en utilidad y de aprendizaje."),
+    Q("En un agente de aprendizaje, ¿qué componente evalúa qué tan bien está actuando?",["El crítico","El actuador","El sensor","El generador de reportes"],"El crítico compara el desempeño con un estándar y da retroalimentación al elemento de aprendizaje."),
+    Q("¿Qué distingue a un agente moderno basado en un LLM con herramientas?",["Usa un modelo de lenguaje para razonar y puede invocar herramientas externas","Solo responde con reglas «si… entonces» escritas a mano","No necesita recibir ninguna instrucción","Funciona únicamente sin conexión a internet"],"El LLM actúa como motor de razonamiento y las herramientas (APIs, bases de datos) son sus actuadores.")
+  ]},
+
+/* ---------- 2 ---------- */
+{ id:2, short:"Características de cada tipo", title:"Características de los diferentes tipos de agente inteligente",
+  desc:"Qué usa cada agente para decidir, sus ventajas y límites, las propiedades de un agente y del entorno (PEAS).",
+  lead:"Conocer las características de cada tipo permite elegir el adecuado para un problema. Se comparan por lo que usan para decidir, si tienen memoria, qué ventajas ofrecen y dónde fallan. También se describen por las propiedades del agente y las del entorno en que trabajan.",
+  blocks:[
+    {t:"h",x:"Comparativa de los cinco tipos"},
+    {t:"table",head:["Tipo","Qué usa para decidir","Memoria","Ventaja","Limitación"],rows:[
+      ["Reflejo simple","Reglas condición–acción sobre la percepción actual","No","Muy rápido y barato de construir","Falla si el entorno no es totalmente observable"],
+      ["Basado en modelos","Percepción + estado interno del mundo","Sí (estado)","Funciona con información parcial","Hay que mantener y actualizar el modelo"],
+      ["Basado en objetivos","Meta explícita + búsqueda o planificación","Sí","Flexible: cambia la meta, cambia el plan","Planificar puede ser lento o costoso"],
+      ["Basado en utilidad","Función de utilidad que puntúa resultados","Sí","Resuelve conflictos entre metas","Diseñar la función de utilidad es difícil"],
+      ["De aprendizaje","Experiencia, datos y retroalimentación","Sí (aprendida)","Se adapta y mejora con el tiempo","Necesita datos y puede aprender comportamientos no deseados"]
+    ]},
+    {t:"h",x:"Propiedades de un agente inteligente"},
+    {t:"cards",items:[
+      {h:"Autonomía",p:"Opera sin intervención humana constante y controla sus propias acciones y su estado."},
+      {h:"Reactividad",p:"Percibe el entorno y responde a tiempo a los cambios que ocurren."},
+      {h:"Proactividad",p:"No solo reacciona: toma la iniciativa para cumplir sus objetivos."},
+      {h:"Habilidad social",p:"Se comunica e interactúa con otros agentes o con personas para coordinar y negociar."}
+    ]},
+    {t:"h",x:"PEAS: cómo describir la tarea de un agente"},
+    {t:"table",head:["Elemento","Pregunta que responde","Ejemplo: taxi autónomo"],rows:[
+      ["Performance","¿Cómo se mide el buen desempeño?","Seguridad, tiempo de viaje, comodidad, costo"],
+      ["Environment","¿En qué entorno opera?","Calles, tráfico, peatones, clima"],
+      ["Actuators","¿Con qué actúa?","Volante, acelerador, freno, señalización"],
+      ["Sensors","¿Con qué percibe?","Cámaras, GPS, radar, velocímetro"]
+    ]},
+    {t:"h",x:"Propiedades del entorno"},
+    {t:"table",head:["Propiedad","Opuestos","Ejemplo"],rows:[
+      ["Observabilidad","Totalmente / parcialmente observable","Ajedrez (total) frente a póker (parcial)"],
+      ["Determinismo","Determinista / estocástico","Crucigrama frente a tráfico real"],
+      ["Episodios","Episódico / secuencial","Clasificar piezas defectuosas frente a una partida de ajedrez"],
+      ["Dinamismo","Estático / dinámico","Sudoku frente a conducir"],
+      ["Valores","Discreto / continuo","Tablero de ajedrez frente a la posición de un dron"],
+      ["Agentes","Un agente / multiagente","Resolver un rompecabezas frente a un mercado de subastas"]
+    ]},
+    {t:"note",x:"Regla práctica: cuanto más parcial, estocástico, dinámico y multiagente sea el entorno, más necesitarás memoria, modelos, utilidad o aprendizaje en lugar de simples reflejos."}
+  ],
+  quiz:[
+    Q("¿Qué propiedad describe la capacidad de un agente de responder oportunamente a los cambios del entorno?",["Reactividad","Proactividad","Habilidad social","Persistencia de datos"],"La reactividad es percibir cambios y responder a tiempo."),
+    Q("Un agente que toma la iniciativa para cumplir sus objetivos, sin esperar un estímulo externo, muestra…",["proactividad","reactividad pura","falta de autonomía","únicamente habilidad social"],"La proactividad es comportamiento dirigido por metas."),
+    Q("¿Cuál es la principal ventaja de un agente reflejo simple?",["Es muy rápido y sencillo de construir","Aprende solo de la experiencia","Planifica a largo plazo","Maneja cualquier entorno parcialmente observable"],"Al no tener memoria ni planificación, su costo computacional es mínimo."),
+    Q("¿Cuál es la limitación típica de un agente reflejo simple?",["Falla cuando el entorno es parcialmente observable","Requiere un modelo del mundo muy detallado","No puede ejecutar acciones","Necesita una función de utilidad"],"Sin memoria, solo ve el presente y puede decidir mal cuando le falta información."),
+    Q("¿En qué se diferencia un agente basado en utilidad de uno basado en objetivos?",["Mide qué tan bueno es cada resultado, no solo si se cumple la meta","No tiene ninguna meta","No usa sensores","Solo funciona en entornos estáticos"],"La utilidad permite comparar y elegir entre varias formas de alcanzar la meta."),
+    Q("¿Qué significa PEAS?",["Medida de desempeño, Entorno, Actuadores y Sensores","Procesador, Energía, Algoritmo y Software","Planificación, Evaluación, Acción y Salida","Percepción, Estado, Acción y Señal"],"PEAS (Performance, Environment, Actuators, Sensors) sirve para especificar el problema que resolverá el agente."),
+    Q("Un entorno es «parcialmente observable» cuando…",["los sensores no dan acceso al estado completo del entorno","el agente nunca puede actuar","todo es predecible","hay un único agente"],"Ejemplo: en el póker no ves las cartas de los demás jugadores."),
+    Q("Un entorno «estocástico» es aquel en el que…",["el resultado de una acción tiene incertidumbre","el resultado siempre es el mismo","no hay otros agentes","el tiempo no transcurre"],"En entornos estocásticos la misma acción puede producir resultados distintos."),
+    Q("La «habilidad social» de un agente se refiere a…",["comunicarse e interactuar con otros agentes o personas","tener una cuenta en redes sociales","ser amigable en su interfaz","almacenar contactos"],"Es la capacidad de coordinación, cooperación y negociación mediante comunicación."),
+    Q("La «autonomía» de un agente significa que…",["opera y controla sus acciones sin intervención humana constante","nunca necesita ningún dato","no tiene objetivos","siempre trabaja sin conexión"],"Un agente autónomo decide por sí mismo dentro de los límites con que fue diseñado.")
+  ]},
+
+/* ---------- 3 ---------- */
+{ id:3, short:"Conceptos básicos para crear un agente", title:"Conceptos básicos para crear un agente inteligente",
+  desc:"El ciclo percibir–decidir–actuar, sus ingredientes, y los conceptos clave de agentes con LLM: herramientas, RAG, memoria y guardrails.",
+  lead:"Todo agente, sencillo o complejo, repite un ciclo: percibe, decide y actúa. Construir uno consiste en definir cada pieza de ese ciclo con claridad y ponerle límites y medición.",
+  blocks:[
+    {t:"h",x:"El ciclo del agente"},
+    {t:"code",x:"mientras el agente esté activo:\n    percepcion = sensores.leer()                  # mensaje, evento, lectura de datos\n    estado     = memoria.actualizar(percepcion)\n    accion     = politica.decidir(estado, objetivo)  # reglas, búsqueda, utilidad o LLM\n    resultado  = actuadores.ejecutar(accion)         # API, base de datos, correo...\n    registro.guardar(percepcion, accion, resultado)  # para evaluar y mejorar"},
+    {t:"h",x:"Ingredientes de un agente"},
+    {t:"cards",items:[
+      {h:"Entorno",p:"Todo lo que rodea al agente: usuarios, sistemas externos, datos o el mundo físico."},
+      {h:"Entradas (sensores)",p:"Cómo percibe: mensajes de chat, eventos, archivos, lecturas de sensores, consultas a APIs."},
+      {h:"Acciones (actuadores)",p:"Lo que puede hacer: responder, escribir en una base de datos, enviar un correo, llamar a una API."},
+      {h:"Política de decisión",p:"La lógica que elige la acción: reglas, búsqueda, utilidad, aprendizaje o un modelo de lenguaje."},
+      {h:"Memoria",p:"Corto plazo (la conversación en curso) y largo plazo (preferencias o historial guardado)."},
+      {h:"Objetivo y desempeño",p:"Qué quiere lograr y cómo se mide el éxito: precisión, tiempo, satisfacción, costo."},
+      {h:"Guardrails",p:"Límites y validaciones que impiden acciones indebidas: permisos, topes, filtros y confirmaciones."},
+      {h:"Observabilidad",p:"Registros y métricas para ver qué hizo el agente, por qué, y detectar fallos."}
+    ]},
+    {t:"h",x:"Conceptos clave en agentes con modelos de lenguaje"},
+    {t:"acc",items:[
+      {h:"Prompt de sistema",p:"Instrucciones persistentes que definen el rol, las reglas, el tono y los límites del agente en toda la conversación."},
+      {h:"Herramientas (function calling)",p:"El modelo no ejecuta nada por sí mismo: solicita llamar a una función externa con parámetros estructurados, y tu código la ejecuta y devuelve el resultado."},
+      {h:"RAG (generación aumentada por recuperación)",p:"Antes de responder, el agente busca información relevante en tus documentos o bases de datos y la incorpora al contexto, para responder con datos propios y actuales."},
+      {h:"Ventana de contexto",p:"Cantidad de texto que el modelo puede considerar a la vez. Es la memoria de corto plazo y es limitada."},
+      {h:"Razonamiento por pasos (ReAct)",p:"Patrón en el que el agente alterna pensar, actuar con una herramienta y observar el resultado hasta resolver la tarea."},
+      {h:"Orquestación y multiagente",p:"Coordinar varios agentes o pasos: un agente planifica, otros ejecutan y otro verifica."},
+      {h:"MCP (Model Context Protocol)",p:"Estándar abierto para conectar modelos de IA con herramientas y fuentes de datos de forma uniforme."},
+      {h:"Human-in-the-loop",p:"Una persona aprueba las acciones críticas (pagos, borrados, envíos masivos) antes de que se ejecuten."}
+    ]},
+    {t:"h",x:"Ruta para construir un agente"},
+    {t:"steps",items:[
+      {h:"Define el problema",p:"¿Qué tarea resolverá, para quién y cómo sabrás que funciona? Escribe el PEAS."},
+      {h:"Elige el tipo de agente",p:"Reglas para casos simples; objetivos o utilidad para decisiones; LLM con herramientas para lenguaje natural."},
+      {h:"Diseña entradas y acciones",p:"Lista qué percibe y qué herramientas puede usar, con sus permisos."},
+      {h:"Añade memoria y conocimiento",p:"Decide qué recuerda y qué documentos o tablas consulta (RAG)."},
+      {h:"Pon guardrails",p:"Límites, validaciones y aprobación humana para lo crítico."},
+      {h:"Prueba, mide y mejora",p:"Casos normales, límite y adversos; registra todo y ajusta."}
+    ]}
+  ],
+  quiz:[
+    Q("¿Cuál es el ciclo básico de un agente?",["Percibir, decidir y actuar","Compilar, ejecutar y borrar","Diseñar, vender y cobrar","Leer, imprimir y apagar"],"Percibir el entorno, decidir con una política y actuar mediante actuadores, de forma repetida."),
+    Q("En un agente de software, ¿cuál es un ejemplo de actuador?",["Una llamada a una API o escribir en una base de datos","El teclado del usuario","La pantalla del monitor únicamente","La memoria RAM"],"Los actuadores son los medios con los que el agente cambia su entorno."),
+    Q("En un agente con LLM, la memoria de corto plazo suele corresponder a…",["la ventana de contexto con el historial de la conversación","una copia de seguridad en la nube","el disco duro del servidor","el prompt del desarrollador solamente"],"El contexto actual es lo que el modelo «recuerda» dentro de la conversación."),
+    Q("¿Qué es RAG?",["Recuperar información relevante de fuentes externas y añadirla al contexto antes de generar la respuesta","Reiniciar el agente de forma automática","Un tipo de base de datos relacional","Una técnica para borrar el historial"],"RAG permite responder con datos propios y actualizados sin reentrenar el modelo."),
+    Q("¿Para qué sirve el function calling (uso de herramientas)?",["Para que el modelo solicite ejecutar funciones externas con parámetros estructurados","Para que el modelo ejecute código directamente en tu servidor sin control","Para aumentar el tamaño de la pantalla","Para compilar el modelo"],"El modelo propone la llamada; tu aplicación la ejecuta y devuelve el resultado."),
+    Q("¿Qué son los guardrails en un agente?",["Límites y validaciones que evitan acciones no deseadas","Una librería de gráficos","Un tipo de sensor","Un formato de archivo"],"Incluyen permisos, topes, filtros y confirmaciones."),
+    Q("¿Qué significa «human-in-the-loop»?",["Que una persona aprueba o supervisa las acciones críticas","Que el agente solo funciona de noche","Que el agente imita la voz humana","Que no se necesitan pruebas"],"Se usa para acciones de alto riesgo como pagos, borrados o envíos masivos."),
+    Q("¿Cuál es el primer paso razonable al crear un agente?",["Definir el problema, el objetivo y el entorno (por ejemplo con PEAS)","Elegir el color de la interfaz","Publicarlo en producción","Comprar más servidores"],"Sin un problema y una medida de éxito claros, no se puede diseñar ni evaluar."),
+    Q("El prompt de sistema sirve para…",["definir de forma persistente el rol, las reglas y el comportamiento del agente","guardar contraseñas","reemplazar la base de datos","medir la velocidad de internet"],"Establece cómo debe comportarse el agente durante toda la sesión."),
+    Q("¿Por qué conviene registrar y evaluar lo que hace un agente (observabilidad)?",["Para medir su desempeño, detectar fallos y mejorarlo","Para que el agente consuma más recursos","Para evitar que los usuarios lo usen","No es necesario si el agente usa IA"],"Lo que no se mide no se puede mejorar ni auditar.")
+  ]},
+
+/* ---------- 4 ---------- */
+{ id:4, short:"Cómo pedirle a la IA un agente", title:"Qué describirle a la IA al solicitarle la generación de un agente inteligente",
+  desc:"La lista de verificación para escribir un buen prompt de diseño de agentes, con un ejemplo completo.",
+  lead:"Una IA como Claude genera mejores agentes cuanto más claro es el encargo. Una petición vaga produce un agente genérico; una petición con rol, objetivo, herramientas y reglas produce algo que puedes probar y usar.",
+  blocks:[
+    {t:"h",x:"Lista de verificación: lo que debes describir"},
+    {t:"cards",items:[
+      {h:"Rol e identidad",p:"Quién es el agente, para quién trabaja, idioma y tono."},
+      {h:"Objetivo y criterios de éxito",p:"Qué debe lograr y cómo medirás que lo hizo bien."},
+      {h:"Usuarios y contexto",p:"Quiénes lo usarán, en qué canal (web, chat, WhatsApp) y qué conocen."},
+      {h:"Entradas",p:"Qué recibe: texto, archivos, datos de formularios, eventos."},
+      {h:"Herramientas y permisos",p:"Qué acciones puede ejecutar (consultar, crear, enviar) y cuáles tiene prohibidas."},
+      {h:"Conocimiento y datos",p:"Fuentes que debe consultar: catálogos, manuales, políticas, tablas."},
+      {h:"Reglas y restricciones",p:"Lo que no debe hacer: inventar datos, compartir información personal, salirse del tema."},
+      {h:"Flujo de trabajo",p:"Pasos que debe seguir y cómo decide entre ellos."},
+      {h:"Formato de salida",p:"Longitud, estructura, tablas o JSON para integrarlo con otros sistemas."},
+      {h:"Errores y escalamiento",p:"Qué hace si falla una herramienta o no sabe, y cuándo pasa el caso a una persona."},
+      {h:"Ejemplos",p:"Uno o dos ejemplos de entrada y salida esperada (few-shot) fijan el comportamiento."},
+      {h:"Entregables y pruebas",p:"Qué quieres recibir: prompt, código, casos de prueba para validarlo."}
+    ]},
+    {t:"h",x:"Ejemplo completo de solicitud"},
+    {t:"prompt",title:"Prompt: agente de atención al cliente para una ferretería en línea",x:"Actúa como arquitecto de agentes de IA. Diseña e implementa un agente de atención al cliente para una ferretería en línea.\n\nROL: asistente amable y técnico, español de México, tutea al cliente.\nOBJETIVO: resolver dudas de productos, disponibilidad y estado de pedidos. Éxito = al menos 80 % de consultas resueltas sin intervención humana.\nENTRADAS: mensajes de texto del chat web; número de pedido opcional.\nHERRAMIENTAS (solo lectura): buscar_producto(nombre), consultar_stock(sku), estado_pedido(id). Nunca modificar pedidos.\nCONOCIMIENTO: catálogo en la base de datos y política de devoluciones (PDF adjunto).\nREGLAS: no inventar precios ni existencias; si no hay dato, decirlo. No pedir ni mostrar datos de tarjetas.\nFLUJO: saludar, identificar la necesidad, consultar la herramienta, responder con datos y ofrecer más ayuda.\nSALIDA: respuesta de máximo 5 líneas y, al final, un JSON con {intencion, resuelto}.\nESCALAMIENTO: si el cliente está molesto o pide una devolución, transferir a una persona con un resumen del caso.\nENTREGABLES: prompt de sistema, definición de herramientas, código en Python y 5 casos de prueba (normales, límite y adversos).\n\nAntes de empezar, hazme las preguntas aclaratorias que necesites."},
+    {t:"note",x:"Truco: termina tu prompt pidiendo «hazme las preguntas aclaratorias que necesites». La IA detecta huecos que no habías considerado."},
+    {t:"h",x:"Errores frecuentes"},
+    {t:"acc",items:[
+      {h:"Pedir «hazme un agente de ventas» sin más",p:"Sin contexto, producto, canal ni reglas, la IA rellena con suposiciones genéricas."},
+      {h:"No poner límites",p:"Si no dices qué no debe hacer, puede inventar datos o prometer cosas que el negocio no puede cumplir."},
+      {h:"Olvidar el formato de salida",p:"Si otro sistema consumirá la respuesta, necesitas pedir una estructura fija como JSON."},
+      {h:"No pedir pruebas",p:"Sin casos de prueba no sabrás si el agente funciona ante preguntas raras o intentos de engañarlo."},
+      {h:"Hacerlo todo en un solo mensaje enorme",p:"Es mejor empezar con lo esencial y refinar en iteraciones, revisando cada resultado."}
+    ]}
+  ],
+  quiz:[
+    Q("¿Cuáles son los primeros elementos que conviene definir al pedirle a una IA que cree un agente?",["Su rol y su objetivo","El color del logotipo","El precio de la licencia","El nombre del servidor"],"Rol y objetivo orientan todo lo demás: herramientas, reglas y tono."),
+    Q("¿Por qué hay que describir las herramientas y los permisos del agente?",["Para que sepa qué acciones puede ejecutar y cuáles no","Para que el prompt sea más largo","Para evitar usar bases de datos","Para que el agente cambie de idioma"],"Definir permisos evita acciones no deseadas, como modificar o borrar datos."),
+    Q("Los «criterios de éxito» sirven para…",["saber cuándo la respuesta o el agente funciona correctamente","decorar la interfaz","reducir la memoria del servidor","elegir el proveedor de nube"],"Sin criterios medibles no hay forma objetiva de evaluar el resultado."),
+    Q("¿Qué aportan los ejemplos de entrada y salida (few-shot) en el prompt?",["Muestran el formato y el comportamiento esperados","Sustituyen las reglas del agente","Aumentan la velocidad del internet","Evitan tener que hacer pruebas"],"Un ejemplo concreto fija estilo, estructura y nivel de detalle mejor que una descripción abstracta."),
+    Q("¿Qué debes especificar sobre el escalamiento?",["Cuándo y cómo transferir el caso a una persona","Cuántas veces puede saludar el agente","El tamaño de la fuente en pantalla","El color de los botones"],"Un buen agente sabe reconocer sus límites y entregar el caso con contexto."),
+    Q("¿Por qué falla un prompt como «hazme un agente de ventas»?",["No define contexto, alcance, herramientas ni reglas","Es demasiado detallado","Está escrito en español","Pide algo imposible para cualquier IA"],"La IA tendría que suponer todo; el resultado sería genérico."),
+    Q("¿Para qué sirve definir el formato de salida (por ejemplo JSON)?",["Para que la respuesta se pueda integrar fácilmente con otros sistemas","Para que el agente sea más lento","Para ocultar errores","Para evitar escribir reglas"],"Una estructura fija permite procesar la respuesta de forma automática."),
+    Q("¿Qué es útil pedirle a la IA antes de que genere el agente?",["Que haga preguntas aclaratorias","Que ignore las restricciones","Que invente los datos faltantes","Que responda sin leer el prompt"],"Las preguntas aclaratorias detectan huecos y reducen suposiciones."),
+    Q("Un ejemplo de restricción útil en el prompt es…",["«No inventes precios ni existencias; si no hay dato, dilo»","«Responde lo que sea»","«Ignora las políticas de la empresa»","«Usa cualquier fuente sin verificar»"],"Las restricciones explícitas reducen alucinaciones y respuestas fuera de política."),
+    Q("Después de recibir el agente generado, ¿qué es lo más recomendable?",["Probarlo con casos normales, límite y adversos, e iterar","Publicarlo directamente sin revisarlo","Borrar el prompt original","Cambiar de IA sin probar"],"Las pruebas revelan fallos y guían el siguiente ajuste del prompt.")
+  ]},
+
+/* ---------- 5 ---------- */
+{ id:5, short:"Sistema en la nube: componentes", title:"Componentes que debo definirle a una IA al pedirle un sistema en la nube",
+  desc:"Con un ejemplo clásico —una tienda en línea con inventario—: requerimientos, arquitectura, seguridad, despliegue y más.",
+  lead:"Para pedirle a una IA un sistema completo hay que describirlo como lo haría un analista: qué hace, quién lo usa, cómo se construye y dónde corre. El ejemplo clásico es una tienda en línea con inventario: tiene usuarios, catálogo, pedidos, pagos y reportes.",
+  blocks:[
+    {t:"h",x:"Arquitectura típica de tres capas"},
+    {t:"arch"},
+    {t:"h",x:"Qué definir, componente por componente"},
+    {t:"cards",items:[
+      {h:"Visión y alcance",p:"Qué problema resuelve y qué incluye la primera versión.",tag:"Vender productos en línea y controlar existencias en tiempo real.",tl:"En la tienda"},
+      {h:"Usuarios y roles",p:"Tipos de usuario y permisos de cada uno.",tag:"Cliente, vendedor, almacenista, administrador.",tl:"En la tienda"},
+      {h:"Requerimientos funcionales",p:"Lo que el sistema debe hacer.",tag:"Catálogo, carrito, pedidos, pagos, inventario, reportes.",tl:"En la tienda"},
+      {h:"Requerimientos no funcionales",p:"Cómo debe comportarse: rendimiento, disponibilidad, seguridad, escalabilidad.",tag:"Responder en menos de 2 s con 500 usuarios simultáneos.",tl:"En la tienda"},
+      {h:"Modelo de datos",p:"Entidades, campos y relaciones (se profundiza en el módulo 6).",tag:"clientes, productos, pedidos, detalle_pedido.",tl:"En la tienda"},
+      {h:"Arquitectura y stack",p:"Frontend, backend, base de datos, colas y almacenamiento, y con qué tecnologías.",tag:"React, API REST en Node o Python, PostgreSQL.",tl:"En la tienda"},
+      {h:"Autenticación y autorización",p:"Autenticación: quién eres. Autorización: qué puedes hacer.",tag:"Inicio de sesión con correo y permisos por rol.",tl:"En la tienda"},
+      {h:"Nube y despliegue",p:"Proveedor, modelo de servicio, contenedores y entornos (desarrollo, pruebas, producción).",tag:"Contenedores Docker en un servicio PaaS.",tl:"En la tienda"},
+      {h:"Seguridad",p:"HTTPS, cifrado, validación de datos, protección contra ataques comunes (OWASP) y manejo de secretos.",tag:"Pagos mediante pasarela externa; nunca guardar la tarjeta.",tl:"En la tienda"},
+      {h:"Respaldos y recuperación",p:"Frecuencia de copias y metas de recuperación (RPO y RTO).",tag:"Respaldo diario y restauración en menos de 1 hora.",tl:"En la tienda"},
+      {h:"CI/CD y pruebas",p:"Pruebas automáticas y despliegue continuo.",tag:"Cada cambio corre pruebas y se despliega a pruebas antes de producción.",tl:"En la tienda"},
+      {h:"Costos y documentación",p:"Presupuesto mensual esperado y documentación mínima para mantenerlo.",tag:"Tope de presupuesto y guía de instalación.",tl:"En la tienda"}
+    ]},
+    {t:"h",x:"Modelos de servicio en la nube"},
+    {t:"table",head:["Modelo","Qué administras tú","Ejemplos"],rows:[
+      ["IaaS","Sistema operativo, entorno de ejecución y aplicación","Amazon EC2, Azure Virtual Machines, Google Compute Engine"],
+      ["PaaS","Solo tu código y tus datos","Azure App Service, Google App Engine, AWS Elastic Beanstalk, Render"],
+      ["Funciones / serverless","Funciones sueltas que se ejecutan por evento","AWS Lambda, Azure Functions, Google Cloud Functions"],
+      ["SaaS","Nada: usas el software ya hecho","Microsoft 365, Salesforce, Google Workspace"]
+    ]},
+    {t:"h",x:"Ejemplo de solicitud"},
+    {t:"prompt",title:"Prompt: tienda en línea con inventario",x:"Actúa como arquitecto de software senior. Diseña y genera una tienda en línea con control de inventario para una ferretería.\n\nALCANCE: catálogo, carrito, pedidos, pagos con pasarela externa, inventario y reportes de ventas.\nROLES: cliente, vendedor, almacenista y administrador, con permisos diferenciados.\nNO FUNCIONALES: responder en menos de 2 segundos con 500 usuarios simultáneos; disponibilidad del 99.5 %.\nARQUITECTURA: tres capas; frontend responsivo, API REST (JSON) y base de datos relacional PostgreSQL.\nSEGURIDAD: HTTPS, contraseñas con hash, validación de entradas y secretos en variables de entorno.\nNUBE: despliegue en contenedores Docker en un servicio PaaS, con entornos de desarrollo y producción.\nRESPALDOS: copia diaria y restauración en menos de 1 hora.\nENTREGABLES: modelo de datos (SQL), estructura de carpetas, código de la API, interfaz base, pruebas y guía de despliegue.\n\nGenera primero el modelo de datos y la arquitectura para que los valide, y después el código por módulos."}
+  ],
+  quiz:[
+    Q("Los requerimientos funcionales de un sistema describen…",["lo que el sistema debe hacer","el color de la interfaz","el presupuesto del proyecto","el nombre del proveedor de nube"],"Ejemplo: registrar pedidos, descontar inventario, generar reportes."),
+    Q("Los requerimientos no funcionales describen…",["cómo debe comportarse el sistema (rendimiento, disponibilidad, seguridad)","las pantallas que tendrá","los usuarios que existen","los nombres de las tablas"],"Son criterios de calidad que condicionan la arquitectura."),
+    Q("En una arquitectura de tres capas, las capas son…",["presentación, lógica de negocio y datos","entrada, salida y almacenamiento temporal","cliente, servidor y router","diseño, pruebas y producción"],"Separar capas facilita el mantenimiento y la escalabilidad."),
+    Q("En un modelo PaaS, ¿qué administra principalmente el usuario?",["Su código y sus datos","Los servidores físicos y la red","El hardware del centro de datos","Nada: solo usa el software terminado"],"En PaaS el proveedor administra la infraestructura y la plataforma de ejecución."),
+    Q("¿Para qué sirve definir roles de usuario en el sistema?",["Para controlar qué puede hacer cada tipo de usuario","Para cambiar el idioma","Para aumentar la velocidad de internet","Para generar facturas automáticamente"],"Los roles son la base de la autorización y de la seguridad de los datos."),
+    Q("¿Cuál es la diferencia entre autenticación y autorización?",["Autenticación verifica quién eres; autorización define qué puedes hacer","Son exactamente lo mismo","Autenticación es el respaldo; autorización es el cifrado","Autorización ocurre antes de iniciar sesión y autenticación después de cerrar sesión"],"Primero se identifica al usuario y después se decide a qué recursos accede."),
+    Q("¿Qué ventaja principal aportan los contenedores como Docker?",["Empaquetan la aplicación con sus dependencias para desplegarla de forma consistente","Eliminan la necesidad de una base de datos","Hacen que el código se escriba solo","Reemplazan la seguridad del sistema"],"El mismo contenedor se comporta igual en desarrollo, pruebas y producción."),
+    Q("El RTO (Recovery Time Objective) indica…",["el tiempo máximo tolerable para restablecer el servicio tras una falla","cuántos datos se pueden perder","el costo mensual de la nube","el número de usuarios simultáneos"],"El RPO, en cambio, mide cuántos datos se pueden perder (hasta qué punto en el tiempo se restaura)."),
+    Q("Una API REST sirve para…",["comunicar el frontend con el backend mediante HTTP, normalmente con JSON","dibujar gráficos en pantalla","comprimir imágenes","crear copias de seguridad"],"Es la interfaz estándar para que distintas partes del sistema intercambien datos."),
+    Q("¿Qué automatiza CI/CD?",["La integración, las pruebas y el despliegue del código","El diseño de logotipos","La redacción de contratos","La compra de dominios"],"Cada cambio se prueba y se despliega de forma repetible, reduciendo errores manuales.")
+  ]},
+
+/* ---------- 6 ---------- */
+{ id:6, short:"Manejadores de bases de datos", title:"Manejadores de bases de datos y relaciones entre tablas",
+  desc:"Relacionales, NoSQL y administrados en la nube; cómo definir claves y relaciones para que la IA genere el modelo correcto.",
+  lead:"Al pedirle a una IA un sistema, hay que decirle qué manejador de base de datos usar y cómo se relacionan las tablas. Esa información define el modelo de datos, la integridad de la información y buena parte del rendimiento.",
+  blocks:[
+    {t:"h",x:"Conceptos para describir relaciones"},
+    {t:"cards",items:[
+      {h:"Clave primaria (PK)",p:"Columna que identifica de forma única cada fila de una tabla."},
+      {h:"Clave foránea (FK)",p:"Columna que apunta a la clave primaria de otra tabla y crea la relación."},
+      {h:"Uno a uno (1:1)",p:"Una fila se relaciona con exactamente una de otra tabla.",tag:"Usuario y perfil detallado.",tl:"Ejemplo"},
+      {h:"Uno a muchos (1:N)",p:"Una fila se relaciona con varias de otra tabla.",tag:"Un cliente tiene muchos pedidos.",tl:"Ejemplo"},
+      {h:"Muchos a muchos (N:M)",p:"Se implementa con una tabla intermedia que contiene las dos claves foráneas.",tag:"Pedidos y productos mediante detalle_pedido.",tl:"Ejemplo"},
+      {h:"Normalización e integridad",p:"Organizar las tablas para evitar datos repetidos y garantizar que las referencias sean válidas.",tag:"No guardar el nombre del cliente en cada pedido.",tl:"Ejemplo"}
+    ]},
+    {t:"code",x:"CREATE TABLE clientes (\n  id_cliente SERIAL PRIMARY KEY,\n  nombre     VARCHAR(100) NOT NULL,\n  correo     VARCHAR(120) UNIQUE NOT NULL\n);\n\nCREATE TABLE productos (\n  id_producto SERIAL PRIMARY KEY,\n  nombre      VARCHAR(120) NOT NULL,\n  precio      NUMERIC(10,2) NOT NULL CHECK (precio >= 0),\n  existencia  INT NOT NULL DEFAULT 0\n);\n\nCREATE TABLE pedidos (                         -- 1 cliente : N pedidos\n  id_pedido  SERIAL PRIMARY KEY,\n  id_cliente INT NOT NULL REFERENCES clientes(id_cliente),\n  fecha      TIMESTAMP DEFAULT NOW()\n);\n\nCREATE TABLE detalle_pedido (                  -- N pedidos : M productos\n  id_pedido   INT REFERENCES pedidos(id_pedido),\n  id_producto INT REFERENCES productos(id_producto),\n  cantidad    INT NOT NULL CHECK (cantidad > 0),\n  PRIMARY KEY (id_pedido, id_producto)\n);"},
+    {t:"h",x:"Principales manejadores de bases de datos"},
+    {t:"table",head:["Familia","Manejador","Cuándo elegirlo"],rows:[
+      ["Relacional","PostgreSQL","Sistemas transaccionales, soporte JSON y extensiones; código abierto"],
+      ["Relacional","MySQL / MariaDB","Aplicaciones web y hospedajes económicos"],
+      ["Relacional","SQL Server","Ecosistema Microsoft, .NET y Azure"],
+      ["Relacional","Oracle Database","Grandes organizaciones con alta criticidad"],
+      ["Relacional","SQLite","Prototipos, apps móviles y escritorio; un solo archivo"],
+      ["Documentos","MongoDB","Datos flexibles con estructura variable"],
+      ["Clave-valor","Redis","Caché, sesiones y colas en memoria"],
+      ["Columnas","Apache Cassandra","Escritura masiva y distribuida"],
+      ["Grafos","Neo4j","Relaciones complejas: redes sociales, recomendaciones"],
+      ["Administrados en la nube","Amazon RDS / Aurora, Azure SQL Database, Google Cloud SQL, Supabase, DynamoDB, Firestore","Delegar respaldos, parches y escalado al proveedor"]
+    ]},
+    {t:"note",x:"Para un sistema transaccional con relaciones estrictas (clientes, pedidos, pagos), lo más natural es una base relacional. Los NoSQL brillan en datos flexibles, caché o grafos."},
+    {t:"h",x:"Cómo describirle las tablas a la IA"},
+    {t:"prompt",title:"Prompt: modelo de datos",x:"Usa PostgreSQL. Genera el script SQL con estas tablas y relaciones:\n\n- clientes(id_cliente PK, nombre, correo único)\n- productos(id_producto PK, nombre, precio >= 0, existencia)\n- pedidos(id_pedido PK, id_cliente FK -> clientes, fecha, estado)\n- detalle_pedido(id_pedido FK, id_producto FK, cantidad > 0) con PK compuesta\n\nRelaciones: un cliente tiene muchos pedidos (1:N); pedidos y productos son N:M mediante detalle_pedido.\nIncluye restricciones NOT NULL, índices en las FK, borrado restringido y datos de ejemplo (5 filas por tabla).\nAl final, dame el diagrama en formato DBML y una explicación breve de cada relación."}
+  ],
+  quiz:[
+    Q("¿Qué es una clave foránea (FK)?",["Una columna que referencia la clave primaria de otra tabla","La columna que identifica una fila de forma única","Una contraseña de la base de datos","Un índice de texto completo"],"La FK es el mecanismo que materializa las relaciones entre tablas."),
+    Q("Una relación muchos a muchos (N:M) se implementa con…",["una tabla intermedia con las dos claves foráneas","una sola columna extra","un archivo de texto","una vista sin tablas"],"Ejemplo: detalle_pedido relaciona pedidos con productos."),
+    Q("La relación entre clientes y pedidos (un cliente, muchos pedidos) es de tipo…",["uno a muchos (1:N)","uno a uno (1:1)","muchos a muchos (N:M) sin tabla intermedia","no existe relación"],"El lado «muchos» (pedidos) lleva la clave foránea hacia clientes."),
+    Q("¿Cuál de los siguientes es un manejador NoSQL de documentos?",["MongoDB","PostgreSQL","SQL Server","SQLite"],"MongoDB almacena documentos en formato similar a JSON."),
+    Q("PostgreSQL es conocido por ser…",["una base relacional de código abierto con amplio soporte de JSON y extensiones","un sistema exclusivo de Microsoft","una base de grafos","un simple archivo de hoja de cálculo"],"Es una de las opciones relacionales más usadas en sistemas nuevos."),
+    Q("Redis se usa típicamente como…",["almacén clave-valor en memoria, por ejemplo caché o sesiones","base de datos de grafos","editor de tablas","herramienta de diagramas"],"Su velocidad en memoria lo hace ideal para caché y datos temporales."),
+    Q("¿Para qué tipo de datos es especialmente útil Neo4j?",["Relaciones complejas, como redes sociales o recomendaciones","Hojas de cálculo contables","Almacenar imágenes","Respaldos comprimidos"],"Las bases de grafos recorren relaciones de forma muy eficiente."),
+    Q("SQL Server es un manejador de bases de datos desarrollado por…",["Microsoft","Oracle","MongoDB Inc.","Google"],"Se integra especialmente bien con .NET y Azure."),
+    Q("La normalización de tablas busca…",["reducir la redundancia y las inconsistencias","aumentar la cantidad de datos repetidos","eliminar las claves primarias","evitar las relaciones"],"Cada dato se guarda en un solo lugar y se referencia con claves."),
+    Q("Para un sistema de pedidos y pagos con relaciones estrictas, la opción más natural es una base…",["relacional","de grafos únicamente","sin esquema ni restricciones","en archivos de texto sueltos"],"Las bases relacionales ofrecen transacciones, integridad referencial y consultas SQL.")
+  ]},
+
+/* ---------- 7 ---------- */
+{ id:7, short:"Editores de tablas y bases de datos", title:"Principales editores de tablas y manejadores de bases de datos",
+  desc:"Herramientas visuales para crear, editar y diagramar las tablas del sistema, y el flujo de trabajo con la IA.",
+  lead:"Después de que la IA genera el modelo, necesitas una herramienta para ejecutar el script, revisar las tablas y ver las relaciones. Los editores y clientes gráficos de bases de datos sirven para eso, y los diagramadores sirven para diseñar el esquema antes de escribir una línea de SQL.",
+  blocks:[
+    {t:"h",x:"Editores y clientes de bases de datos"},
+    {t:"table",head:["Herramienta","Motor(es)","Qué destaca"],rows:[
+      ["pgAdmin","PostgreSQL","Administración oficial de PostgreSQL, de escritorio y web"],
+      ["MySQL Workbench","MySQL","Modelado visual con diagramas ER, editor SQL y administración"],
+      ["SQL Server Management Studio (SSMS)","SQL Server","Herramienta oficial de Microsoft para SQL Server (Windows)"],
+      ["DBeaver","Multimotor (la edición Community es gratuita)","Una sola herramienta para casi cualquier base; incluye diagramas ER"],
+      ["DataGrip","Multimotor","IDE de JetBrains con autocompletado y refactorización (de pago)"],
+      ["TablePlus","Multimotor","Interfaz ligera y rápida para macOS, Windows y Linux"],
+      ["HeidiSQL","MariaDB, MySQL, PostgreSQL, SQL Server","Cliente ligero y popular en Windows"],
+      ["phpMyAdmin","MySQL / MariaDB","Administración desde el navegador; común en hospedajes"],
+      ["Adminer","Varios motores","Administrador web en un solo archivo PHP"],
+      ["DB Browser for SQLite","SQLite","Editor visual y gratuito de archivos SQLite"],
+      ["MongoDB Compass","MongoDB","Explorar y editar colecciones y documentos"],
+      ["Oracle SQL Developer","Oracle Database","Herramienta gratuita y oficial de Oracle"],
+      ["Supabase Studio","PostgreSQL en Supabase","Editor de tablas y SQL en el navegador, dentro de la nube"]
+    ]},
+    {t:"h",x:"Herramientas para diseñar diagramas y esquemas"},
+    {t:"cards",items:[
+      {h:"dbdiagram.io",p:"Escribes el esquema en DBML y se dibuja el diagrama ER; puede exportar a SQL. Muy cómodo para compartir con la IA."},
+      {h:"draw.io (diagrams.net)",p:"Diagramador general y gratuito; útil para ER, arquitectura y flujos."},
+      {h:"MySQL Workbench y DBeaver",p:"Generan el diagrama ER a partir de la base existente (ingeniería inversa) para verificar relaciones."},
+      {h:"Lucidchart y similares",p:"Diagramas colaborativos en línea, con plantillas de entidad–relación."}
+    ]},
+    {t:"h",x:"Flujo de trabajo recomendado con la IA"},
+    {t:"steps",items:[
+      {h:"Diseña el esquema",p:"Haz un diagrama ER o escribe las tablas y relaciones en texto o DBML."},
+      {h:"Pídele a la IA el script",p:"Indica el manejador (por ejemplo PostgreSQL) y que genere el SQL con claves, restricciones e índices."},
+      {h:"Ejecútalo en tu editor",p:"Pega el script en pgAdmin, DBeaver, SSMS u otro cliente compatible con tu motor."},
+      {h:"Verifica las relaciones",p:"Abre el diagrama ER del editor y comprueba que las claves foráneas coincidan con tu diseño."},
+      {h:"Carga datos de prueba y ajusta",p:"Inserta datos de ejemplo, prueba consultas y pide a la IA correcciones si algo no cuadra."}
+    ]},
+    {t:"note",x:"Elige el editor según tu motor: pgAdmin o DBeaver para PostgreSQL, SSMS para SQL Server, MySQL Workbench o phpMyAdmin para MySQL. Si trabajas con varios motores, DBeaver o TablePlus te ahorran cambiar de herramienta."},
+    {t:"prompt",title:"Prompt: de diagrama a script",x:"Te comparto el esquema en DBML (adjunto). Genera el script SQL para PostgreSQL con CREATE TABLE, claves primarias y foráneas, índices y restricciones. Después dame:\n1) el orden correcto para ejecutar los CREATE TABLE,\n2) un script de datos de ejemplo,\n3) tres consultas para verificar las relaciones (JOIN) desde pgAdmin o DBeaver."}
+  ],
+  quiz:[
+    Q("¿Para qué motor de base de datos se usa pgAdmin?",["PostgreSQL","SQLite","Oracle","MongoDB"],"pgAdmin es la herramienta de administración de referencia para PostgreSQL."),
+    Q("SQL Server Management Studio (SSMS) sirve para administrar…",["SQL Server","MySQL","PostgreSQL","Redis"],"Es la herramienta oficial de Microsoft para SQL Server."),
+    Q("¿Cuál es una ventaja clave de DBeaver?",["Soporta múltiples motores y tiene una edición Community gratuita","Solo funciona con Oracle","No permite ejecutar SQL","Es exclusivo de Linux"],"Es una herramienta multimotor muy usada para trabajar con varias bases desde un mismo lugar."),
+    Q("phpMyAdmin se utiliza para…",["administrar MySQL o MariaDB desde el navegador","editar documentos de MongoDB","diseñar interfaces gráficas","crear máquinas virtuales"],"Es muy común en hospedajes web tradicionales."),
+    Q("MongoDB Compass es…",["una herramienta gráfica para explorar y editar datos de MongoDB","un editor de hojas de cálculo","un servidor de correo","un diagramador de redes"],"Permite ver colecciones y documentos y construir consultas visualmente."),
+    Q("DB Browser for SQLite se usa para…",["abrir y editar archivos de bases de datos SQLite","administrar servidores Oracle","diseñar logotipos","compilar aplicaciones móviles"],"SQLite guarda toda la base en un archivo, y esta herramienta lo edita visualmente."),
+    Q("dbdiagram.io permite…",["dibujar diagramas ER escribiendo el esquema en DBML","ejecutar copias de seguridad","monitorear servidores","crear presentaciones"],"Es práctico para diseñar el esquema y compartirlo con la IA o con el equipo."),
+    Q("¿Para qué sirve darle a la IA un diagrama ER o el esquema de tablas?",["Para que entienda las entidades, atributos y relaciones y genere el SQL correcto","Para que ignore las claves foráneas","Para reducir el tamaño del código","Para evitar usar un editor de bases de datos"],"Mientras más preciso el esquema, menos suposiciones hace la IA."),
+    Q("Oracle SQL Developer es una herramienta oficial para trabajar con…",["Oracle Database","MongoDB","SQLite","Redis"],"Es el entorno gráfico gratuito de Oracle para desarrollo y administración."),
+    Q("¿Cuál es un flujo de trabajo adecuado con la IA para crear las tablas?",["Diseñar el esquema, generar el script SQL con la IA, ejecutarlo en el editor y verificar las relaciones","Ejecutar el script sin leerlo y no verificar nada","Escribir los datos a mano sin diseño previo","Evitar usar un editor de bases de datos"],"Verificar en el editor que las relaciones coincidan con el diseño evita errores posteriores.")
+  ]},
+
+/* ---------- 8 ---------- */
+{ id:8, short:"Integración: de agentes a un sistema por rubro", title:"Integración: del agente inteligente a un sistema web por rubro",
+  desc:"Todo junto: repaso de agentes y el proceso completo para pedirle a una IA, como Claude, un sistema web para un sector productivo.",
+  lead:"Este módulo une lo anterior. Primero recuerdas qué tipo de agente conviene, y luego sigues el proceso completo para solicitar a una IA (por ejemplo Claude) un sistema web enfocado en un rubro o segmento de la actividad económica o productiva.",
+  blocks:[
+    {t:"h",x:"Repaso rápido: qué agente para qué necesidad"},
+    {t:"table",head:["Necesidad","Tipo de agente recomendado","Por qué"],rows:[
+      ["Reglas inmediatas y claras","Reflejo simple","Rápido y fácil de mantener"],
+      ["Seguir el estado de algo que no se ve completo","Basado en modelos","Necesita memoria del estado"],
+      ["Llegar a una meta con varios pasos","Basado en objetivos","Planifica la secuencia de acciones"],
+      ["Elegir entre varias opciones con criterios","Basado en utilidad","Pondera costo, tiempo y riesgo"],
+      ["Mejorar con el uso y los datos","De aprendizaje","Se adapta con retroalimentación"],
+      ["Tareas complejas con roles distintos","Multiagente o jerárquico","Especialización y coordinación"],
+      ["Interacción en lenguaje natural con acceso a sistemas","Agente con LLM y herramientas","Entiende texto y ejecuta acciones"]
+    ]},
+    {t:"h",x:"Proceso completo con la IA"},
+    {t:"steps",items:[
+      {h:"Elige el rubro y entiende su operación",p:"Define el segmento, quiénes participan, qué procesos hay y cuáles duelen más."},
+      {h:"Escribe el brief",p:"Problema, usuarios, objetivos y alcance de la primera versión."},
+      {h:"Pide y valida los requerimientos",p:"Que la IA los liste y tú los corriges: funcionales, no funcionales, roles y reglas del negocio."},
+      {h:"Define el modelo de datos",p:"Tablas, claves, relaciones y manejador (módulos 6 y 7). Valida el diagrama antes de seguir."},
+      {h:"Elige la arquitectura y la nube",p:"Capas, stack, autenticación, seguridad y servicio de despliegue (módulo 5)."},
+      {h:"Define los agentes, si los hay",p:"Qué agente ayuda a quién, con qué herramientas, reglas y límites (módulos 3 y 4)."},
+      {h:"Genera por módulos y prueba",p:"Pide un módulo a la vez, ejecútalo, revisa el código y prueba casos normales y límite."},
+      {h:"Despliega, mide e itera",p:"Publica en la nube, observa el uso, recoge retroalimentación y mejora por ciclos cortos."}
+    ]},
+    {t:"h",x:"Ejemplos de rubros y agentes útiles"},
+    {t:"cards",items:[
+      {h:"Agricultura",p:"Control de parcelas, riego y cosechas.",tag:"Agente reflejo: regar si la humedad baja de un umbral; agente de utilidad para planear siembras.",tl:"Agente"},
+      {h:"Salud",p:"Citas, expedientes y recordatorios.",tag:"Agente LLM para agendar; exige privacidad y control de acceso estrictos.",tl:"Agente"},
+      {h:"Comercio minorista",p:"Inventario, ventas y proveedores.",tag:"Agente de objetivos que repone existencias; recomendador de aprendizaje.",tl:"Agente"},
+      {h:"Logística",p:"Rutas, flotas y entregas.",tag:"Agente de utilidad que equilibra costo, tiempo y combustible.",tl:"Agente"},
+      {h:"Educación",p:"Cursos, evaluaciones y seguimiento.",tag:"Tutor LLM con RAG sobre el material del curso.",tl:"Agente"},
+      {h:"Manufactura",p:"Producción, calidad y mantenimiento.",tag:"Agente basado en modelos que monitorea máquinas y predice fallas.",tl:"Agente"}
+    ]},
+    {t:"h",x:"Plantilla de solicitud para cualquier rubro"},
+    {t:"prompt",title:"Prompt maestro: sistema web por rubro",x:"Actúa como arquitecto de software y analista de negocio. Quiero un sistema web para el rubro: [RUBRO / SEGMENTO, por ejemplo: producción de aguacate, clínica dental, distribuidora de abarrotes].\n\n1. CONTEXTO: describe en 5 líneas cómo opera este rubro y mis procesos principales: [...].\n2. PROBLEMA Y OBJETIVOS: [qué duele hoy y qué quiero lograr, con métricas].\n3. USUARIOS Y ROLES: [lista].\n4. ALCANCE DE LA VERSIÓN 1: [módulos mínimos].\n5. DATOS: manejador [PostgreSQL / MySQL / SQL Server]; entidades principales: [...]; relaciones: [...].\n6. AGENTES INTELIGENTES: [qué tareas automatizar, con qué herramientas y qué límites].\n7. ARQUITECTURA Y NUBE: [stack, proveedor, autenticación, respaldos].\n8. REGLAS DEL NEGOCIO Y NORMATIVA: [por ejemplo protección de datos personales].\n9. ENTREGABLES: requerimientos, modelo de datos (SQL), arquitectura, código por módulos, pruebas y guía de despliegue.\n\nProcede por etapas. Primero hazme preguntas aclaratorias y entrégame los requerimientos y el modelo de datos para validarlos. No generes código hasta que los apruebe."},
+    {t:"h",x:"Buenas prácticas y riesgos"},
+    {t:"acc",items:[
+      {h:"Itera por módulos y prueba cada uno",p:"Es más fácil corregir una pieza pequeña que un sistema completo generado de golpe."},
+      {h:"Revisa el código que genera la IA",p:"Puede contener errores o vulnerabilidades. Quien lo publica es responsable de revisarlo y probarlo."},
+      {h:"No pegues secretos ni datos reales",p:"Evita contraseñas, llaves de API y datos personales o sensibles en el prompt. Usa datos de ejemplo."},
+      {h:"Usa control de versiones (Git)",p:"Registra cada cambio, compara versiones y regresa a un estado anterior si algo falla."},
+      {h:"Considera la normativa del rubro",p:"Salud, finanzas o educación pueden exigir privacidad, auditoría y retención de datos específicas."},
+      {h:"Mide y mejora",p:"Define indicadores desde el inicio y revisa los registros de los agentes para ajustar su comportamiento."}
+    ]}
+  ],
+  quiz:[
+    Q("¿Cuál es el primer paso para pedirle a una IA un sistema web de un rubro específico?",["Elegir el rubro y entender sus procesos, actores y problemas","Pedir directamente todo el código","Elegir el color de la interfaz","Contratar el hosting más caro"],"Sin entender el negocio, los requerimientos y el modelo de datos serán genéricos."),
+    Q("¿Qué orden de trabajo es el más adecuado?",["Brief, requerimientos, modelo de datos, arquitectura, generación por módulos, pruebas y despliegue","Despliegue, código, pruebas y luego el brief","Código, diseño visual y luego el modelo de datos","Pruebas y después los requerimientos"],"Se avanza de lo general a lo específico, validando cada etapa."),
+    Q("Un sistema de riego que activa el agua cuando la humedad baja de cierto umbral es un agente…",["reflejo simple","de aprendizaje profundo obligatoriamente","multiagente obligatoriamente","sin sensores"],"Aplica una regla directa sobre la percepción actual."),
+    Q("Un asistente que propone rutas de reparto equilibrando costo, tiempo y combustible es un agente…",["basado en utilidad","reflejo simple","sin objetivos","estático"],"Compara alternativas con una función que pondera varios criterios."),
+    Q("¿Qué NO debes pegar en un prompt?",["Contraseñas, llaves de API y datos personales reales","Una descripción del rubro","Datos de ejemplo ficticios","La lista de roles de usuario"],"Usa datos de ejemplo y variables de entorno para los secretos."),
+    Q("En un sistema para clínicas, además de las funciones, ¿qué requiere especial atención?",["La privacidad y el control de acceso de datos sensibles","Solo el diseño visual","El color de los botones","El número de emojis"],"Los datos de salud son sensibles y suelen estar regulados."),
+    Q("¿Cuál es la mejor estrategia al generar un sistema con IA?",["Pedir un módulo a la vez, probarlo e iterar","Pedir todo en un solo mensaje y publicarlo sin revisar","Evitar las pruebas para ahorrar tiempo","Cambiar de requerimientos a mitad de cada respuesta"],"Las iteraciones cortas permiten detectar y corregir errores pronto."),
+    Q("¿Por qué hay que revisar el código generado por la IA?",["Porque puede tener errores o vulnerabilidades y el responsable es quien lo publica","Porque la IA nunca genera código funcional","Porque el código generado no se puede ejecutar","No es necesario revisarlo"],"La IA acelera el trabajo, pero la verificación sigue siendo humana."),
+    Q("¿Para qué sirve usar Git en el desarrollo?",["Para registrar cambios y poder regresar a versiones anteriores","Para hacer más lenta la aplicación","Para sustituir la base de datos","Para cifrar contraseñas"],"El control de versiones da trazabilidad y facilita colaborar y deshacer."),
+    Q("¿Por qué conviene indicarle a la IA el rubro específico del sistema?",["Para que el vocabulario, las reglas, los flujos y la normativa sean pertinentes","Para que el sistema sea más lento","Para evitar definir roles","Para que no se necesite base de datos"],"El contexto del sector orienta decisiones de diseño, datos y cumplimiento.")
+  ]}
+];
+
+/* ====================== Render: bloques de lección ====================== */
+function renderBlock(b,m){
+  switch(b.t){
+    case "h": return `<h3>${b.x}</h3>`;
+    case "p": return `<p>${b.x}</p>`;
+    case "note": return `<aside class="note">${b.x}</aside>`;
+    case "code": return `<div class="code"><pre><code>${esc(b.x)}</code></pre></div>`;
+    case "prompt": return `<figure class="prompt"><figcaption><span>${esc(b.title)}</span><button class="copy" type="button" data-copy>Copiar prompt</button></figcaption><pre>${esc(b.x)}</pre></figure>`;
+    case "cards": return `<div class="cards">${b.items.map(c=>`<article class="card"><h4>${c.h}</h4><p>${c.p}</p>${c.tag?`<p class="ex"><b>${c.tl||"Ejemplo"}:</b> ${c.tag}</p>`:""}</article>`).join("")}</div>`;
+    case "table": return `<div class="tablewrap" tabindex="0" role="region" aria-label="Tabla desplazable"><table><thead><tr>${b.head.map(h=>`<th scope="col">${h}</th>`).join("")}</tr></thead><tbody>${b.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+    case "steps": return `<ol class="steps">${b.items.map(s=>`<li><div><b>${s.h}</b><span>${s.p}</span></div></li>`).join("")}</ol>`;
+    case "acc": return `<div class="acc">${b.items.map(a=>`<details><summary>${a.h}</summary><div>${a.p}</div></details>`).join("")}</div>`;
+    case "arch": return `<div class="arch"><div class="arch-row"><div class="box">Navegador o app móvil<small>Presentación: interfaz del usuario</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="box">API backend<small>Lógica de negocio · REST con JSON</small></div><span class="arrow" aria-hidden="true">⇄</span><div class="box">Base de datos<small>Datos: tablas y relaciones</small></div></div><div class="arch-side"><b>Servicios de apoyo:</b> autenticación · almacenamiento de archivos · pasarela de pagos · correo · monitoreo y registros</div></div>`;
+  }
+  return "";
+}
+
+/* ====================== Estado de avance ====================== */
+const passed = id => (store.scores[id] && store.scores[id].best >= 6);
+function renderNav(current){
+  const list=$("#navList");
+  const items=[`<li><a class="nav-item nav-home" href="#/" ${current==="home"?'aria-current="page"':''} style="--m:#101828"><span class="nav-num" aria-hidden="true">⌂</span><span class="nav-text">Inicio<small>Resumen del curso</small></span></a></li>`];
+  MODULES.forEach(m=>{
+    const s=store.scores[m.id];
+    const badge = s ? `<span class="nav-badge ${s.best>=6?"pass":"low"}">${s.best}/10</span>` : "";
+    const sub = s ? (s.best>=6?"Aprobado":"Repasar") : "Lección + quiz";
+    items.push(`<li><a class="nav-item" href="#/m/${m.id}" ${current===m.id?'aria-current="page"':''} style="--m:${COLORS[m.id-1]}"><span class="nav-num">${m.id}</span><span class="nav-text">${m.short}<small>${sub}</small></span>${badge}</a></li>`);
+  });
+  list.innerHTML=items.join("");
+  const done=MODULES.filter(m=>passed(m.id)).length;
+  $("#progText").innerHTML=`Tu avance: <b>${done} de ${MODULES.length}</b> quizzes aprobados`;
+  $("#progFill").style.width=(done/MODULES.length*100)+"%";
+  $("#progBar").setAttribute("aria-valuenow",done);
+}
+
+/* ====================== Vista: Inicio ====================== */
+let loopTimer=null;
+const LOOP=[
+  {k:"Entorno",d:"Todo lo que rodea al agente: personas, datos, sistemas externos o el mundo físico. Es lo que el agente observa y modifica."},
+  {k:"Percibir",d:"Los sensores —o las entradas de software— convierten el entorno en información: un mensaje, un evento, una lectura."},
+  {k:"Decidir",d:"La política elige la acción usando reglas, búsqueda, utilidad, aprendizaje o un modelo de lenguaje, apoyada en memoria y objetivos."},
+  {k:"Actuar",d:"Los actuadores ejecutan: llamar una API, escribir en la base de datos, responder al usuario. Esto cambia el entorno y el ciclo continúa."}
+];
+function loopSVG(){
+  const cx=180,cy=150,R=100,r=40;
+  const rad=d=>d*Math.PI/180;
+  const pt=(a)=>[cx+R*Math.cos(rad(a)),cy+R*Math.sin(rad(a))];
+  const angles=[-90,0,90,180];
+  let arcs="";
+  angles.forEach(a=>{ const p1=pt(a+28), p2=pt(a+90-28); arcs+=`<path d="M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A${R} ${R} 0 0 1 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}" fill="none" stroke="#9AA5BD" stroke-width="2.5" marker-end="url(#ah)"/>`; });
+  const nodes=LOOP.map((n,i)=>{ const p=pt(angles[i]); return `<g class="node" data-i="${i}" tabindex="0" role="button" aria-label="${n.k}: ver explicación"><circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${r}"/><text x="${p[0].toFixed(1)}" y="${(p[1]+5).toFixed(1)}">${n.k}</text></g>`; }).join("");
+  return `<svg viewBox="0 0 360 300" role="group" aria-label="Ciclo del agente: entorno, percibir, decidir, actuar"><defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#9AA5BD"/></marker></defs>${arcs}<text class="center" x="${cx}" y="${cy-2}">Ciclo del</text><text class="center" x="${cx}" y="${cy+16}">agente</text>${nodes}</svg>`;
+}
+function viewHome(){
+  const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const next=MODULES.find(m=>!passed(m.id))||MODULES[0];
+  $("#view").innerHTML=`
+  <section class="hero">
+    <div>
+      <h1>Aprende a diseñar agentes inteligentes y a pedirle sistemas a una IA</h1>
+      <p class="lead">Ocho módulos con lección y un quiz de 10 preguntas cada uno. Tus respuestas se evalúan aquí mismo, con explicación de cada acierto y cada error.</p>
+      <a class="btn btn-primary" href="#/m/${next.id}">${Object.keys(store.scores).length?"Continuar con el módulo "+next.id:"Comenzar el módulo 1"}</a>
+    </div>
+    <div class="panel loop">
+      ${loopSVG()}
+      <div class="loop-desc" id="loopDesc" aria-live="polite"></div>
+    </div>
+  </section>
+  <h2 class="section-title">Módulos del curso</h2>
+  <div class="mod-grid">${MODULES.map(m=>{const s=store.scores[m.id];return `<a class="mod-card" href="#/m/${m.id}" style="--m:${COLORS[m.id-1]}"><div class="mod-top"><span class="mod-num">${m.id}</span>${s?`<span class="nav-badge ${s.best>=6?"pass":"low"}">Mejor: ${s.best}/10</span>`:`<span class="nav-badge">Sin intentar</span>`}</div><h3>${m.short}</h3><p>${m.desc}</p></a>`}).join("")}</div>`;
+  // Interacción del ciclo
+  const nodes=[...document.querySelectorAll(".loop .node")];
+  const desc=$("#loopDesc");
+  let idx=0;
+  const show=i=>{ idx=i; nodes.forEach((n,j)=>n.classList.toggle("on",j===i)); desc.innerHTML=`<b>${LOOP[i].k}.</b> ${LOOP[i].d}`; };
+  const stop=()=>{ if(loopTimer){clearInterval(loopTimer);loopTimer=null;} };
+  nodes.forEach((n,i)=>{ const go=()=>{stop();show(i);}; n.addEventListener("click",go); n.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();go();} }); });
+  show(0);
+  if(!reduce){ loopTimer=setInterval(()=>show((idx+1)%4),3200); }
+}
+
+/* ====================== Vista: Módulo ====================== */
+const quizState={};
+function viewModule(id,tab){
+  const m=MODULES.find(x=>x.id===id); if(!m){location.hash="#/";return;}
+  const prev=MODULES[id-2], next=MODULES[id];
+  const color=COLORS[id-1];
+  let body="";
+  if(tab==="quiz"){ body=`<div id="quizHost"></div>`; }
+  else{
+    body=`<div class="lesson"><p>${m.lead}</p>${m.blocks.map(b=>renderBlock(b,m)).join("")}
+      <div class="cta"><p>¿Listo para comprobar lo aprendido? Responde 10 preguntas y recibe tu evaluación al instante.</p><a class="btn btn-primary" href="#/m/${id}/quiz">Ir al quiz del módulo ${id}</a></div></div>`;
+  }
+  $("#view").innerHTML=`
+    <div style="--m:${color}">
+    <header class="mod-head"><span class="mod-num">${id}</span><div><h1>${m.title}</h1><p>${m.desc}</p></div></header>
+    <nav class="tabs" aria-label="Secciones del módulo"><a href="#/m/${id}" ${tab!=="quiz"?'aria-current="page"':''}>Lección</a><a href="#/m/${id}/quiz" ${tab==="quiz"?'aria-current="page"':''}>Quiz · 10 preguntas</a></nav>
+    ${body}
+    <div class="pager">${prev?`<a class="btn btn-ghost" href="#/m/${prev.id}">← ${prev.short}</a>`:`<a class="btn btn-ghost" href="#/">← Inicio</a>`}${next?`<a class="btn btn-ghost" href="#/m/${next.id}">${next.short} →</a>`:`<a class="btn btn-ghost" href="#/">Volver al inicio</a>`}</div>
+    </div>`;
+  if(tab==="quiz") renderQuiz(m);
+}
+
+/* ====================== Quiz ====================== */
+function newAttempt(m){
+  quizState[m.id]={done:false,answers:{},order:m.quiz.map((q,qi)=>({qi,opts:shuffle(q.o.map((_,k)=>k))}))};
+}
+function renderQuiz(m){
+  if(!quizState[m.id]) newAttempt(m);
+  const st=quizState[m.id];
+  const host=$("#quizHost");
+  host.innerHTML=`
+  <section class="quiz ${st.done?"done":""}" id="quiz">
+    <div id="resultHost"></div>
+    <div class="hint-empty">¡Sin errores! No hay preguntas falladas que mostrar.</div>
+    <div class="quiz-bar" id="qbar"><span id="qcount">0 de 10 respondidas</span><div class="bar"><i id="qfill"></i></div></div>
+    ${st.order.map((o,n)=>{ const q=m.quiz[o.qi]; return `<fieldset class="q" data-n="${n}" style="border:1px solid var(--line);margin-inline:0;min-width:0"><legend style="position:absolute;left:-9999px">Pregunta ${n+1}</legend><h4><small>Pregunta ${n+1} de 10</small>${esc(q.q)}</h4><div class="opts">${o.opts.map((k,j)=>`<label class="opt" data-k="${k}"><input type="radio" name="q${n}" value="${k}"><span class="dot" aria-hidden="true"></span><span>${esc(q.o[k])}</span></label>`).join("")}</div></fieldset>`; }).join("")}
+    <div class="quiz-actions"><button class="btn btn-primary" id="submitQ" disabled>Evaluar respuestas</button><small id="submitHint">Responde las 10 preguntas para evaluar.</small></div>
+  </section>`;
+  const quiz=$("#quiz");
+  quiz.addEventListener("change",e=>{
+    if(st.done) return;
+    const inp=e.target; if(inp.type!=="radio") return;
+    const n=+inp.name.slice(1); st.answers[n]=+inp.value; updateProgress(st);
+  });
+  $("#submitQ").addEventListener("click",()=>evaluate(m,st));
+  if(st.done){ /* no se vuelve a pintar tras evaluar; se reinicia con Reintentar */ }
+  updateProgress(st);
+}
+function updateProgress(st){
+  const c=Object.keys(st.answers).length;
+  $("#qcount").textContent=`${c} de 10 respondidas`;
+  $("#qfill").style.width=(c*10)+"%";
+  const btn=$("#submitQ"); btn.disabled=c<10;
+  $("#submitHint").textContent=c<10?`Te faltan ${10-c} por responder.`:"Todo listo. Puedes evaluar.";
+}
+function evaluate(m,st){
+  if(st.done) return;
+  st.done=true;
+  let score=0; const wrongList=[];
+  st.order.forEach((o,n)=>{
+    const q=m.quiz[o.qi];
+    const card=document.querySelector(`.q[data-n="${n}"]`);
+    const picked=st.answers[n];
+    const ok=picked===0;
+    if(ok) score++; else wrongList.push(n);
+    card.classList.add(ok?"is-right":"is-wrong");
+    card.querySelectorAll("input").forEach(i=>i.disabled=true);
+    card.querySelectorAll(".opt").forEach(l=>{
+      const k=+l.dataset.k;
+      if(k===0) l.classList.add("right");
+      else if(k===picked) l.classList.add("wrong");
+    });
+    card.insertAdjacentHTML("beforeend",`<div class="fb ${ok?"ok":"ko"}"><b>${ok?"Correcto":"Incorrecta"}</b>${ok?"":`Respuesta correcta: ${esc(q.o[0])}. `}${esc(q.e)}</div>`);
+  });
+  const prevS=store.scores[m.id]||{best:0,attempts:0};
+  store.scores[m.id]={best:Math.max(prevS.best,score),last:score,attempts:prevS.attempts+1};
+  save(); renderNav(m.id);
+  const pct=score*10;
+  let c="#C8243F",title="Repasa la lección",msg="Todavía hay conceptos por afianzar. Lee de nuevo la lección, revisa tus errores abajo y vuelve a intentarlo.";
+  if(score>=9){c="#0B8A5F";title="¡Excelente!";msg="Dominas el tema. Puedes pasar al siguiente módulo con confianza.";}
+  else if(score>=7){c="#0B8A5F";title="Muy bien";msg="Tienes una base sólida. Revisa las preguntas falladas para cerrar los detalles.";}
+  else if(score>=6){c="#9A5B00";title="Aprobado";msg="Cumples el mínimo. Conviene repasar los puntos que fallaste antes de avanzar.";}
+  const next=MODULES[m.id];
+  $("#resultHost").innerHTML=`<div class="result" style="--c:${c}" role="status"><div class="ring" style="--p:${pct}"><div><span>${score}/10<small>${pct} %</small></span></div></div><div class="result-body"><h3>${title}</h3><p>${msg} Mejor resultado: <b>${store.scores[m.id].best}/10</b> · Intentos: ${store.scores[m.id].attempts}.</p><div class="row"><button class="btn btn-primary" id="retry">Reintentar quiz</button>${wrongList.length?`<button class="btn btn-ghost" id="onlyWrong" aria-pressed="false">Ver solo las falladas (${wrongList.length})</button>`:""}<a class="btn btn-ghost" href="#/m/${m.id}">Repasar lección</a>${next?`<a class="btn btn-ghost" href="#/m/${next.id}">Siguiente módulo</a>`:`<a class="btn btn-ghost" href="#/">Volver al inicio</a>`}</div></div></div>`;
+  const quiz=$("#quiz"); quiz.classList.add("done"); if(!wrongList.length) quiz.classList.add("perfect");
+  $("#qbar").style.display="none";
+  $("#submitQ").parentElement.style.display="none";
+  $("#retry").addEventListener("click",()=>{ newAttempt(m); renderQuiz(m); window.scrollTo({top:0}); $("#view").focus({preventScroll:true}); });
+  const ow=$("#onlyWrong");
+  if(ow) ow.addEventListener("click",()=>{ const on=quiz.classList.toggle("only-wrong"); ow.setAttribute("aria-pressed",on); ow.textContent=on?"Ver todas las preguntas":`Ver solo las falladas (${wrongList.length})`; });
+  $("#resultHost").scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+}
+
+/* ====================== Router ====================== */
+function setTitle(t){ $("#topTitle").textContent=t; document.title=t+" — Agentes IA"; }
+function route(){
+  if(loopTimer){clearInterval(loopTimer);loopTimer=null;}
+  const h=location.hash||"#/";
+  const mm=h.match(/^#\/m\/(\d+)(?:\/(quiz))?$/);
+  closeNav();
+  if(mm){
+    const id=+mm[1], tab=mm[2]||"lesson";
+    if(!MODULES[id-1]){location.hash="#/";return;}
+    renderNav(id); viewModule(id,tab); setTitle(`Módulo ${id}`);
+  }else{
+    renderNav("home"); viewHome(); setTitle("Agentes IA");
+  }
+  window.scrollTo({top:0,behavior:"auto"});
+  const v=$("#view"); v.focus({preventScroll:true});
+}
+window.addEventListener("hashchange",route);
+
+/* ====================== Menú responsivo ====================== */
+const nav=$("#nav"), scrim=$("#scrim"), menuBtn=$("#menuBtn");
+function openNav(){ nav.classList.add("open"); scrim.classList.add("show"); menuBtn.setAttribute("aria-expanded","true"); }
+function closeNav(){ nav.classList.remove("open"); scrim.classList.remove("show"); menuBtn.setAttribute("aria-expanded","false"); }
+menuBtn.addEventListener("click",()=>nav.classList.contains("open")?closeNav():openNav());
+scrim.addEventListener("click",closeNav);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeNav(); });
+window.matchMedia("(min-width:960px)").addEventListener("change",closeNav);
+
+/* ====================== Copiar prompts ====================== */
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-copy]"); if(!b) return;
+  const text=b.closest(".prompt").querySelector("pre").textContent;
+  let ok=false;
+  try{ await navigator.clipboard.writeText(text); ok=true; }catch(_){
+    try{ const ta=document.createElement("textarea"); ta.value=text; ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta); ta.select(); ok=document.execCommand("copy"); ta.remove(); }catch(__){}
+  }
+  const old=b.textContent; b.textContent=ok?"¡Copiado!":"Selecciona y copia manualmente";
+  setTimeout(()=>b.textContent=old,2000);
+});
+
+route();
+})();
+</script>
+</body>
+</html>
